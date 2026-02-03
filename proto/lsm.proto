@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package lsm;
+
+// Core LSM entry stored in memtable and SSTables
+message LSMEntry {
+  string key = 1;
+  bytes value = 2;
+  int64 timestamp = 3;
+  bool is_tombstone = 4;
+}
+
+// SSTable file format with metadata
+message SSTable {
+  int32 level = 1;
+  string min_key = 2;
+  string max_key = 3;
+  repeated LSMEntry entries = 4;
+  int64 created_at = 5;
+  int32 entry_count = 6;
+  int64 uncompressed_size_bytes = 7;
+  string bloom_filter_data = 8;
+}
+
+// WAL (Write-Ahead Log) entry format
+message WALEntry {
+  enum Operation {
+    PUT = 0;
+    DELETE = 1;
+  }
+  
+  int32 sequence = 1;
+  int64 timestamp = 2;
+  Operation operation = 3;
+  string key = 4;
+  bytes value = 5;
+  bool is_batch = 6;
+  int32 batch_size = 7;
+}
+
+// Batch operation format for /api/kv/batch endpoints
+message BatchOperation {
+  string key = 1;
+  bytes value = 2;
+}
+
+message BatchPutRequest {
+  repeated BatchOperation operations = 1;
+}
+
+message BatchDeleteRequest {
+  repeated string keys = 1;
+}

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LSM Tree - Navigation Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        h1 { color: #4ade80; }
+        .nav-link {
+            display: block;
+            padding: 15px;
+            margin: 10px 0;
+            background: #2a2a2a;
+            border: 1px solid #4ade80;
+            color: #4ade80;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        .nav-link:hover {
+            background: #3a3a3a;
+            transform: translateX(5px);
+        }
+        .status {
+            padding: 10px;
+            margin: 20px 0;
+            background: #2a2a2a;
+            border-left: 4px solid #4ade80;
+        }
+        .test-results {
+            margin-top: 30px;
+            padding: 20px;
+            background: #2a2a2a;
+            border-radius: 5px;
+        }
+        .success { color: #4ade80; }
+        .error { color: #ef4444; }
+        button {
+            padding: 10px 20px;
+            background: #4ade80;
+            color: #000;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        button:hover { background: #22c55e; }
+    </style>
+</head>
+<body>
+    <h1>🗄️ LSM Tree Storage Engine - Navigation Test</h1>
+    
+    <div class="status">
+        <strong>Server Status:</strong> <span id="server-status">Checking...</span>
+    </div>
+
+    <h2>📑 Available Pages:</h2>
+    
+    <a href="http://localhost:5000/" class="nav-link" target="_blank">
+        🏠 Console (Home Page)
+    </a>
+    
+    <a href="http://localhost:5000/visualizer" class="nav-link" target="_blank">
+        📊 Visualizer (Telemetry & Internals)
+    </a>
+    
+    <a href="http://localhost:5000/benchmarks" class="nav-link" target="_blank">
+        ⚡ Benchmarks (Performance Testing)
+    </a>
+
+    <div class="test-results">
+        <h3>🧪 Run Tests:</h3>
+        <button onclick="runTests()">Test All Endpoints</button>
+        <div id="results" style="margin-top: 15px;"></div>
+    </div>
+
+    <script>
+        async function checkServer() {
+            try {
+                const res = await fetch('http://localhost:5000/api/lsm/stats');
+                const data = await res.json();
+                document.getElementById('server-status').innerHTML = 
+                    '<span class="success">✅ Running (MemTable: ' + data.memTableSize + ' entries)</span>';
+                return true;
+            } catch (e) {
+                document.getElementById('server-status').innerHTML = 
+                    '<span class="error">❌ Not Running - Start with: npm start</span>';
+                return false;
+            }
+        }
+
+        async function runTests() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<p>Testing...</p>';
+            
+            const tests = [
+                { name: 'Home Page (/)', url: 'http://localhost:5000/' },
+                { name: 'Visualizer Page (/visualizer)', url: 'http://localhost:5000/visualizer' },
+                { name: 'Benchmarks Page (/benchmarks)', url: 'http://localhost:5000/benchmarks' },
+                { name: 'Stats API', url: 'http://localhost:5000/api/lsm/stats' }
+            ];
+            
+            let html = '<h4>Test Results:</h4>';
+            
+            for (const test of tests) {
+                try {
+                    const res = await fetch(test.url);
+                    const success = res.ok;
+                    html += `<div style="margin: 5px 0;">
+                        ${success ? '<span class="success">✅</span>' : '<span class="error">❌</span>'} 
+                        ${test.name}: ${res.status} ${res.statusText}
+                    </div>`;
+                } catch (e) {
+                    html += `<div style="margin: 5px 0;">
+                        <span class="error">❌</span> ${test.name}: Error - ${e.message}
+                    </div>`;
+                }
+            }
+            
+            results.innerHTML = html;
+        }
+
+        // Check server status on load
+        checkServer();
+        
+        // Auto-refresh server status every 5 seconds
+        setInterval(checkServer, 5000);
+    </script>
+</body>
+</html>
